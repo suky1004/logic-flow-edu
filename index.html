@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>알고리즘 및 순서도 교육 프로그램</title>
+    <title>알고리즘 및 순서도 교육</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700&display=swap" rel="stylesheet">
     <script>
@@ -77,9 +77,20 @@
                         <label class="block text-sm font-medium text-admin mb-1">관리자: 새 문제 제목</label>
                         <input type="text" id="adminTitle" placeholder="예: 토스트에 빵굽기" class="w-full border-gray-300 rounded-md shadow-sm p-2 border focus:ring-admin focus:border-admin">
                     </div>
+                    <div class="flex-none flex flex-col justify-center">
+                        <label class="block text-sm font-medium text-admin mb-1">수업 대상</label>
+                        <div class="flex gap-3 text-sm items-center h-10 bg-white border border-gray-300 rounded-md px-3 shadow-sm">
+                            <label class="flex items-center gap-1 cursor-pointer">
+                                <input type="radio" name="adminDifficulty" value="basic" checked class="text-admin focus:ring-admin"> 기초
+                            </label>
+                            <label class="flex items-center gap-1 cursor-pointer">
+                                <input type="radio" name="adminDifficulty" value="advanced" class="text-admin focus:ring-admin"> 심화
+                            </label>
+                        </div>
+                    </div>
                     <div class="flex-none flex items-end w-full md:w-auto mt-2 md:mt-0 gap-2">
-                        <button id="btnDeleteProblem" class="w-full md:w-auto bg-gray-200 hover:bg-gray-300 text-gray-800 px-4 py-2 rounded-md shadow transition-colors font-medium">문제 삭제</button>
-                        <button id="btnSaveProblem" class="w-full md:w-auto bg-admin hover:bg-red-600 text-white px-4 py-2 rounded-md shadow transition-colors font-medium">문제 저장</button>
+                        <button id="btnDeleteProblem" class="w-full md:w-auto bg-gray-200 hover:bg-gray-300 text-gray-800 px-4 py-2 rounded-md shadow transition-colors font-medium h-10">문제 삭제</button>
+                        <button id="btnSaveProblem" class="w-full md:w-auto bg-admin hover:bg-red-600 text-white px-4 py-2 rounded-md shadow transition-colors font-medium h-10">문제 저장</button>
                     </div>
                 </div>
             </div>
@@ -100,11 +111,11 @@
             <div class="p-4 bg-gray-50 border-b border-gray-200 flex justify-between items-center shrink-0">
                 <h2 class="font-bold text-gray-700">1단계: 알고리즘 설계</h2>
                 <div id="difficultySelector" class="flex gap-2 text-sm">
-                    <label class="flex items-center gap-1 cursor-pointer">
-                        <input type="radio" name="difficulty" value="basic" checked class="text-primary focus:ring-primary"> 기초
+                    <label id="lblStudentBasic" class="flex items-center gap-1">
+                        <input type="radio" id="radioStudentBasic" name="difficulty" value="basic" checked disabled class="text-primary focus:ring-primary"> 기초
                     </label>
-                    <label class="flex items-center gap-1 cursor-pointer">
-                        <input type="radio" name="difficulty" value="advanced" class="text-primary focus:ring-primary"> 심화
+                    <label id="lblStudentAdvanced" class="flex items-center gap-1 hidden">
+                        <input type="radio" id="radioStudentAdvanced" name="difficulty" value="advanced" disabled class="text-primary focus:ring-primary"> 심화
                     </label>
                 </div>
             </div>
@@ -339,12 +350,14 @@
             {
                 title: "토스트에 빵굽기",
                 description: "토스트기를 이용하여 맛있는 식빵을 구워보자.",
-                algorithm: "1. 시작\n2. 빵, 토스트기\n3. 토스트기에 전원을 연결한다.\n4. 타이머를 설정한다.\n5. 빵이 구워졌는가?\n6. 참이면 빵을 꺼낸다.\n7. 잼을 바를 것인가?\n8. 참이면 잼을 바른다.\n9. 아니면 그냥 접시에 담는다.\n10. 종료"
+                algorithm: "1. 시작\n2. 빵, 토스트기\n3. 토스트기에 전원을 연결한다.\n4. 타이머를 설정한다.\n5. 빵이 구워졌는가?\n6. 참이면 빵을 꺼낸다.\n7. 잼을 바를 것인가?\n8. 참이면 잼을 바른다.\n9. 아니면 그냥 접시에 담는다.\n10. 종료",
+                difficulty: "basic"
             },
             {
                 title: "횡단보도 건너기",
                 description: "안전하게 횡단보도를 건너는 방법을 순서도로 만들어보자.",
-                algorithm: "1. 시작\n2. 횡단보도 앞에 선다.\n3. 신호등이 녹색인가?\n4. 참이면 좌우를 살피며 건넌다.\n5. 아니면 기다린다.\n6. 무사히 건넜는가?\n7. 참이면 종료\n8. 아니면 3번으로 돌아간다."
+                algorithm: "1. 시작\n2. 횡단보도 앞에 선다.\n3. 신호등이 녹색인가?\n4. 참이면 좌우를 살피며 건넌다.\n5. 아니면 기다린다.\n6. 무사히 건넜는가?\n7. 참이면 종료\n8. 아니면 3번으로 돌아간다.",
+                difficulty: "basic"
             }
         ];
 
@@ -378,7 +391,11 @@
             btnDeleteProblem: document.getElementById('btnDeleteProblem'),
             programDescription: document.getElementById('programDescription'),
             adminDescription: document.getElementById('adminDescription'),
-            difficultyRadios: document.getElementsByName('difficulty'),
+            adminDifficultyRadios: document.getElementsByName('adminDifficulty'),
+            lblStudentBasic: document.getElementById('lblStudentBasic'),
+            lblStudentAdvanced: document.getElementById('lblStudentAdvanced'),
+            radioStudentBasic: document.getElementById('radioStudentBasic'),
+            radioStudentAdvanced: document.getElementById('radioStudentAdvanced'),
             basicAlgorithmText: document.getElementById('basicAlgorithmText'),
             basicAlgorithmWrapper: document.getElementById('basicAlgorithmWrapper'),
             advancedAlgorithmView: document.getElementById('advancedAlgorithmView'),
@@ -563,7 +580,7 @@
             els.btnClassMode.addEventListener('click', () => setMode(false));
             els.btnAdminMode.addEventListener('click', () => {
                 if(AppState.isAdmin) return; 
-                Modal.show('관리자 인증', '관리자 비밀번호를 입력하세요. (기본: 1234)', 'prompt', (pwd) => {
+                Modal.show('관리자 인증', '관리자 비밀번호를 입력하세요.', 'prompt', (pwd) => {
                     if (pwd === '1234') {
                         setMode(true);
                         return true; 
@@ -579,13 +596,6 @@
             });
 
             els.studentName.addEventListener('input', () => { drawCanvas(); });
-
-            Array.from(els.difficultyRadios).forEach(radio => {
-                radio.addEventListener('change', (e) => {
-                    AppState.difficulty = e.target.value;
-                    updateDifficultyUI();
-                });
-            });
 
             let hintTimeout;
             els.btnHint.addEventListener('click', (e) => {
@@ -764,10 +774,14 @@
             els.adminBlockerOverlay.classList.toggle('hidden', !isAdmin);
 
             if (isAdmin) {
-                const prob = AppState.problems[AppState.currentProblemIndex] || {title:'', description:'', algorithm:''};
+                const prob = AppState.problems[AppState.currentProblemIndex] || {title:'', description:'', algorithm:'', difficulty:'basic'};
                 els.adminTitle.value = prob.title;
                 els.adminDescription.value = prob.description;
                 els.adminAlgorithmInput.value = prob.algorithm;
+                
+                Array.from(els.adminDifficultyRadios).forEach(r => {
+                    r.checked = (r.value === (prob.difficulty || 'basic'));
+                });
             } else {
                 loadCurrentProblem();
             }
@@ -793,6 +807,19 @@
             els.basicAlgorithmText.textContent = prob.algorithm;
             els.studentAlgorithmInput.value = ''; 
             
+            AppState.difficulty = prob.difficulty || 'basic';
+
+            if (AppState.difficulty === 'basic') {
+                els.radioStudentBasic.checked = true;
+                els.lblStudentBasic.classList.remove('hidden');
+                els.lblStudentAdvanced.classList.add('hidden');
+            } else {
+                els.radioStudentAdvanced.checked = true;
+                els.lblStudentAdvanced.classList.remove('hidden');
+                els.lblStudentBasic.classList.add('hidden');
+            }
+            updateDifficultyUI();
+
             if (!AppState.isAdmin) {
                 AppState.flowchartNodes = [{ type: ShapeTypes.TERMINAL, id: Date.now(), text: '시작' }];
                 els.shapeSelect.value = 'none';
@@ -806,12 +833,17 @@
             const desc = els.adminDescription.value.trim();
             const algo = els.adminAlgorithmInput.value.trim();
 
+            let selectedDiff = 'basic';
+            Array.from(els.adminDifficultyRadios).forEach(r => {
+                if(r.checked) selectedDiff = r.value;
+            });
+
             if (!title || !algo) {
                 Modal.show('오류', '문제 제목과 알고리즘 내용은 필수입니다.', 'error');
                 return;
             }
 
-            const newProb = { title, description: desc, algorithm: algo };
+            const newProb = { title, description: desc, algorithm: algo, difficulty: selectedDiff };
             const existingIndex = AppState.problems.findIndex(p => p.title === title);
             
             if (existingIndex >= 0) {
@@ -843,6 +875,10 @@
                 els.adminTitle.value = prob.title;
                 els.adminDescription.value = prob.description;
                 els.adminAlgorithmInput.value = prob.algorithm;
+                
+                Array.from(els.adminDifficultyRadios).forEach(r => {
+                    r.checked = (r.value === (prob.difficulty || 'basic'));
+                });
 
                 Modal.show('성공', '문제가 삭제되었습니다.', 'success');
             });
