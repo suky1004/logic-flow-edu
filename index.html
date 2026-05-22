@@ -5,835 +5,1137 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>알고리즘 및 순서도 교육 프로그램</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700\&display=swap" rel="stylesheet">
-    <!-- Mermaid.js for advanced flowchart rendering -->
-    <script src="https://cdn.jsdelivr.net/npm/mermaid@10.6.1/dist/mermaid.min.js"></script>
-    <style>
-        body { font-family: 'Noto Sans KR', sans-serif; background-color: #f3f4f6; }
-        /* 스크롤바 커스텀 */
-        ::-webkit-scrollbar { width: 8px; height: 8px; }
-        ::-webkit-scrollbar-track { background: #f1f1f1; border-radius: 4px; }
-        ::-webkit-scrollbar-thumb { background: #c1c1c1; border-radius: 4px; }
-        ::-webkit-scrollbar-thumb:hover { background: #a8a8a8; }
- 
-        /* Mermaid SVG가 컨테이너에 맞게 조절되도록 */
-        #canvasContainer svg {
-            max-width: 100%;
-            height: auto;
-        }
-    </style>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700&display=swap" rel="stylesheet">
     <script>
         tailwind.config = {
             theme: {
                 extend: {
-                    colors: { primary: '#3B82F6', secondary: '#10B981', admin: '#8B5CF6' }
+                    fontFamily: {
+                        sans: ['"Noto Sans KR"', 'sans-serif'],
+                    },
+                    colors: {
+                        primary: '#4F46E5', // Indigo 600
+                        secondary: '#10B981', // Emerald 500
+                        admin: '#EF4444', // Red 500
+                        canvasbg: '#F9FAFB',
+                    }
                 }
             }
         }
-        // Mermaid 초기화
-        mermaid.initialize({ startOnLoad: false, securityLevel: 'loose' });
     </script>
+    <style>
+        body { font-family: 'Noto Sans KR', sans-serif; background-color: #F3F4F6; }
+        .custom-scrollbar::-webkit-scrollbar { width: 8px; }
+        .custom-scrollbar::-webkit-scrollbar-track { background: #f1f1f1; border-radius: 4px; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: #c1c1c1; border-radius: 4px; }
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #a8a8a8; }
+        canvas { touch-action: none; } /* Prevent scrolling on canvas */
+        
+        /* Modal Animation */
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        @keyframes slideIn { from { transform: translateY(-20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+        .modal-overlay { animation: fadeIn 0.2s ease-out forwards; }
+        .modal-content { animation: slideIn 0.3s ease-out forwards; }
+    </style>
 </head>
-<body class="h-screen flex flex-col text-gray-800">
+<body class="h-screen flex flex-col text-gray-800 overflow-hidden">
 
-    <!-- Header (Mode Switcher) -->
-    <header class="bg-white shadow-sm px-6 py-3 flex justify-between items-center shrink-0">
-        <h1 class="text-xl font-bold text-gray-800 flex items-center gap-2">
-            <svg class="w-6 h-6 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4"></path></svg>
-            코딩 논리 쑥쑥! 순서도 완성하기
-        </h1>
-        <div class="flex gap-2 bg-gray-100 p-1 rounded-lg">
-            <button id="btnStudentMode" class="px-4 py-2 rounded-md font-bold text-sm bg-white shadow text-primary transition">수업 모드</button>
-            <button id="btnAdminMode" class="px-4 py-2 rounded-md font-bold text-sm text-gray-500 hover:text-admin transition">관리자 모드</button>
+    <header class="bg-white shadow-sm z-10 shrink-0">
+        <div class="max-w-7xl mx-auto px-4 h-16 flex items-center justify-between">
+            <div class="flex items-center gap-2">
+                <svg class="w-8 h-8 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 3v2m6-2v2M9 19v2m6-2v2M5 9H3m2 6H3m18-6h-2m2 6h-2M7 19h10a2 2 0 002-2V7a2 2 0 00-2-2H7a2 2 0 00-2 2v10a2 2 0 002 2zM9 9h6v6H9V9z"></path></svg>
+                <h1 class="text-xl font-bold text-gray-800 hidden sm:block">알고리즘 & 순서도 마스터</h1>
+                <h1 class="text-lg font-bold text-gray-800 sm:hidden">순서도 마스터</h1>
+            </div>
+            <div class="flex gap-2 bg-gray-100 p-1 rounded-lg">
+                <button id="btnClassMode" class="px-3 sm:px-4 py-2 rounded-md bg-white shadow-sm text-primary font-semibold transition-all text-sm sm:text-base">수업 모드</button>
+                <button id="btnAdminMode" class="px-3 sm:px-4 py-2 rounded-md text-gray-500 hover:bg-gray-200 font-medium transition-all text-sm sm:text-base">관리자 모드</button>
+            </div>
         </div>
     </header>
 
-    <!-- Main Content Area -->
-    <main class="flex-1 overflow-hidden flex flex-col relative">
-
-        <!-- ================= ADMIN MODE ================= -->
-        <div id="adminView" class="hidden absolute inset-0 bg-gray-50 z-10 flex flex-col items-center p-6 overflow-y-auto">
-            <div class="w-full max-w-3xl bg-white p-8 rounded-xl shadow-lg border-t-4 border-admin">
-                <div class="flex justify-between items-center mb-6">
-                    <h2 class="text-2xl font-bold text-admin flex items-center gap-2">
-                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
-                        선생님(관리자) 문제 출제
-                    </h2>
-                    <span class="text-sm text-gray-500 bg-gray-100 px-3 py-1 rounded-full">비밀번호 보호됨</span>
+    <section class="bg-white border-b border-gray-200 z-10 shrink-0">
+        <div class="max-w-7xl mx-auto px-4 py-4">
+            <div class="flex flex-col md:flex-row gap-4 items-start md:items-center">
+                <!-- Class Mode Top Bar -->
+                <div id="classTopBar" class="flex-1 flex flex-col md:flex-row gap-4 w-full">
+                    <div class="flex-1 w-full">
+                        <label class="block text-sm font-medium text-gray-700 mb-1">프로그램 선택</label>
+                        <select id="programSelect" class="w-full border-gray-300 rounded-md shadow-sm p-2 border focus:ring-primary focus:border-primary">
+                            <!-- Options populated dynamically -->
+                        </select>
+                    </div>
+                    <div class="flex-1 w-full">
+                        <label class="block text-sm font-medium text-gray-700 mb-1">학생 이름</label>
+                        <input type="text" id="studentName" placeholder="이름을 입력하세요" class="w-full border-gray-300 rounded-md shadow-sm p-2 border focus:ring-primary focus:border-primary">
+                    </div>
                 </div>
 
-                <div class="space-y-5">
-                    <div>
-                        <label class="block text-sm font-bold text-gray-700 mb-1">프로그램 제목</label>
-                        <input type="text" id="adminTitle" placeholder="예: 토스트에 빵굽기" class="w-full border-gray-300 rounded-md shadow-sm p-3 border focus:ring-admin focus:border-admin">
+                <!-- Admin Mode Top Bar -->
+                <div id="adminTopBar" class="flex-1 flex flex-col md:flex-row gap-4 w-full hidden">
+                    <div class="flex-1 w-full">
+                        <label class="block text-sm font-medium text-admin mb-1">관리자: 새 문제 제목</label>
+                        <input type="text" id="adminTitle" placeholder="예: 토스트에 빵굽기" class="w-full border-gray-300 rounded-md shadow-sm p-2 border focus:ring-admin focus:border-admin">
                     </div>
-                    <div>
-                        <label class="block text-sm font-bold text-gray-700 mb-1">프로그램 설명</label>
-                        <textarea id="adminDescription" rows="2" placeholder="학생들에게 보여줄 문제의 상황을 설명해주세요." class="w-full border-gray-300 rounded-md shadow-sm p-3 border focus:ring-admin focus:border-admin"></textarea>
+                    <div class="flex-none flex items-end w-full md:w-auto mt-2 md:mt-0 gap-2">
+                        <button id="btnDeleteProblem" class="w-full md:w-auto bg-gray-200 hover:bg-gray-300 text-gray-800 px-4 py-2 rounded-md shadow transition-colors font-medium">문제 삭제</button>
+                        <button id="btnSaveProblem" class="w-full md:w-auto bg-admin hover:bg-red-600 text-white px-4 py-2 rounded-md shadow transition-colors font-medium">문제 저장</button>
                     </div>
-                    <div>
-                        <label class="block text-sm font-bold text-gray-700 mb-1">알고리즘 작성 (번호순 텍스트)</label>
-                        <p class="text-xs text-gray-500 mb-2">학생들이 참고할 수 있도록 순서대로 작성해주세요. (심화 난이도에서는 힌트로 제공됩니다.)</p>
-                        <textarea id="adminAlgorithmInput" rows="10" placeholder="1. 시작\&#10;2. 빵, 토스트기\&#10;3. 토스트기에 전원을 연결한다.\&#10;..." class="w-full border-gray-300 rounded-md shadow-sm p-3 border focus:ring-admin focus:border-admin font-mono text-sm leading-relaxed"></textarea>
+                </div>
+            </div>
+            
+            <div class="mt-4 bg-blue-50 p-3 rounded-md border border-blue-100">
+                <h3 class="text-sm font-semibold text-blue-800 mb-1">프로그램 설명</h3>
+                <p id="programDescription" class="text-sm text-blue-900 min-h-[1.5rem]">프로그램을 선택해주세요.</p>
+                <!-- Admin description input -->
+                <input type="text" id="adminDescription" placeholder="프로그램 설명을 입력하세요..." class="w-full border-gray-300 rounded-md shadow-sm p-2 border text-sm hidden mt-1">
+            </div>
+        </div>
+    </section>
+
+    <main class="flex-1 flex flex-col md:flex-row overflow-hidden">
+        
+        <!-- Column 1: Algorithm -->
+        <div class="w-full md:w-1/3 bg-white border-b md:border-b-0 md:border-r border-gray-200 flex flex-col h-1/3 md:h-full shrink-0">
+            <div class="p-4 bg-gray-50 border-b border-gray-200 flex justify-between items-center shrink-0">
+                <h2 class="font-bold text-gray-700">1단계: 알고리즘 설계</h2>
+                <div id="difficultySelector" class="flex gap-2 text-sm">
+                    <label class="flex items-center gap-1 cursor-pointer">
+                        <input type="radio" name="difficulty" value="basic" checked class="text-primary focus:ring-primary"> 기초
+                    </label>
+                    <label class="flex items-center gap-1 cursor-pointer">
+                        <input type="radio" name="difficulty" value="advanced" class="text-primary focus:ring-primary"> 심화
+                    </label>
+                </div>
+            </div>
+            <div class="flex-1 p-4 overflow-y-auto custom-scrollbar flex flex-col relative">
+                <!-- Class Mode View -->
+                <div id="classAlgorithmView" class="flex-1 flex flex-col h-full relative">
+                    <div id="basicAlgorithmWrapper" class="flex-1 h-full flex flex-col">
+                        <div id="basicAlgorithmText" class="flex-1 bg-gray-100 rounded-lg p-4 text-gray-700 whitespace-pre-wrap font-mono text-sm leading-relaxed border border-gray-200 overflow-y-auto">
+                            <!-- Pre-written algorithm shown here in basic mode -->
+                        </div>
                     </div>
-                    <button onclick="saveAdminProblem()" class="w-full bg-admin hover:bg-purple-700 text-white font-bold py-3 px-4 rounded-lg shadow-md transition text-lg">
-                        문제 저장 및 수업에 반영하기
-                    </button>
+                    
+                    <div id="advancedAlgorithmView" class="hidden flex-1 flex flex-col h-full relative">
+                        <textarea id="studentAlgorithmInput" class="flex-1 w-full h-full border border-gray-300 rounded-lg p-4 font-mono text-sm resize-none focus:ring-2 focus:ring-primary focus:border-primary" placeholder="설명문을 보고 스스로 알고리즘을 번호순으로 입력해보세요.&#10;예)&#10;1. 시작&#10;2. ..."></textarea>
+                        <button id="btnHint" class="absolute bottom-4 right-4 text-sm bg-yellow-100 text-yellow-800 hover:bg-yellow-200 px-3 py-1.5 rounded-md border border-yellow-300 transition-colors shadow-sm">선생님 힌트 보기</button>
+                        
+                        <!-- Hint Overlay -->
+                        <div id="hintOverlay" class="absolute inset-0 bg-white/95 border border-yellow-300 rounded-lg p-4 font-mono text-sm text-gray-700 whitespace-pre-wrap hidden flex flex-col z-10 shadow-lg">
+                            <span class="text-yellow-600 font-bold mb-2 flex items-center gap-1"><svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd"></path></svg> 힌트 (잠시 후 사라집니다)</span>
+                            <div id="hintText" class="flex-1 overflow-y-auto"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Admin Mode View -->
+                <div id="adminAlgorithmView" class="hidden flex-1 flex flex-col h-full">
+                    <p class="text-xs text-red-500 mb-2 font-medium shrink-0">* 번호를 매겨 텍스트로 알고리즘을 작성하세요.</p>
+                    <textarea id="adminAlgorithmInput" class="flex-1 w-full border border-red-300 rounded-lg p-4 font-mono text-sm resize-none focus:ring-2 focus:ring-admin focus:border-admin" placeholder="1. 시작&#10;2. 빵, 토스트기&#10;3. 토스트기에 전원을 연결한다."></textarea>
                 </div>
             </div>
         </div>
 
-        <!-- ================= STUDENT MODE ================= -->
-        <div id="studentView" class="flex-1 flex flex-col h-full">
- 
-            <!-- Student Header (Problem Selection) -->
-            <div class="bg-white px-6 py-4 border-b flex flex-wrap gap-4 items-end shrink-0">
-                <div class="w-full md:w-1/4">
-                    <label class="block text-sm font-bold text-gray-700 mb-1">내 이름</label>
-                    <input type="text" id="studentName" placeholder="이름을 입력하세요" class="w-full border-gray-300 rounded-md shadow-sm p-2 border focus:ring-primary focus:border-primary bg-blue-50">
-                </div>
-                <div class="w-full md:w-1/3 flex-1">
-                    <label class="block text-sm font-bold text-gray-700 mb-1">해결할 문제 선택 (프로그램 제목)</label>
-                    <select id="programSelect" class="w-full border-gray-300 rounded-md shadow-sm p-2 border focus:ring-primary focus:border-primary text-lg font-semibold text-blue-900 bg-blue-50">
-                        <!-- Options dynamically loaded -->
-                    </select>
-                </div>
-                <div class="w-full md:w-full">
-                    <p id="programDescDisplay" class="text-gray-600 bg-gray-100 p-3 rounded-lg border text-sm"></p>
-                </div>
+        <!-- Column 2: Flowchart Menu -->
+        <div class="w-full md:w-1/3 bg-white border-b md:border-b-0 md:border-r border-gray-200 flex flex-col h-1/3 md:h-full relative shrink-0">
+            <!-- Overlay to block interaction in admin mode -->
+            <div id="adminBlockerOverlay" class="absolute inset-0 bg-gray-100/80 z-20 hidden flex items-center justify-center backdrop-blur-[1px]">
+                <p class="text-gray-500 font-medium">관리자 모드에서는 문제만 출제합니다.</p>
             </div>
 
-            <!-- 3 Columns Layout -->
-            <div class="flex-1 flex flex-col md:flex-row overflow-hidden">
- 
-                <!-- COLUMN 1: Algorithm \& Difficulty -->
-                <div class="w-full md:w-1/4 flex flex-col border-r bg-white p-4 overflow-y-auto">
-                    <div class="mb-4">
-                        <label class="block text-sm font-bold text-gray-700 mb-1">난이도 선택</label>
-                        <select id="difficultySelect" class="w-full border border-gray-300 rounded-md p-2 bg-gray-50 focus:ring-primary focus:border-primary">
-                            <option value="basic">기초 (선생님의 알고리즘 보고 만들기)</option>
-                            <option value="advanced">심화 (직접 알고리즘 작성 후 만들기)</option>
+            <div class="p-4 bg-gray-50 border-b border-gray-200 shrink-0">
+                <h2 class="font-bold text-gray-700">2단계: 순서도 도형 선택</h2>
+            </div>
+            
+            <div class="flex-1 p-4 overflow-y-auto custom-scrollbar flex flex-col gap-4">
+                
+                <!-- Shape Selection Dropdown -->
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">도형 종류</label>
+                    <select id="shapeSelect" class="w-full border-gray-300 rounded-md shadow-sm p-2 border focus:ring-secondary focus:border-secondary">
+                        <option value="none">-- 도형을 선택하세요 --</option>
+                        <option value="terminal">단말 (시작/종료)</option>
+                        <option value="prepare">준비 (변수/초기화)</option>
+                        <option value="process">처리 (작업 명시)</option>
+                        <option value="io">입출력 (입력/출력)</option>
+                        <option value="decision">비교/판단 (조건)</option>
+                    </select>
+                    <p id="shapeDesc" class="text-xs text-gray-500 mt-1 min-h-[2rem]">도형을 선택하면 설명이 나타납니다.</p>
+                </div>
+
+                <!-- Dynamic Input Area based on shape -->
+                <div id="shapeInputArea" class="bg-gray-50 p-4 rounded-lg border border-gray-200 hidden flex-col gap-3 transition-all">
+                    
+                    <!-- Standard Text Input (Process, Data, Start/End) -->
+                    <div id="standardInputGroup" class="hidden flex-col gap-2">
+                        <label class="block text-sm font-medium text-gray-700">내용 입력</label>
+                        <input type="text" id="standardTextInput" class="w-full border-gray-300 rounded-md p-2 border text-sm" placeholder="내용을 입력하세요">
+                    </div>
+
+                    <!-- Condition Sub-menu & Inputs -->
+                    <div id="conditionInputGroup" class="hidden flex-col gap-3">
+                        <label class="block text-sm font-medium text-gray-700">조건 종류</label>
+                        <select id="conditionTypeSelect" class="w-full border-gray-300 rounded-md p-2 border text-sm">
+                            <option value="if">1. if 문 (예일 경우만 행동)</option>
+                            <option value="ifelse">2. if~else 문 (예/아니오 모두 행동)</option>
                         </select>
-                    </div>
 
-                    <div class="flex-1 flex flex-col relative">
-                        <!-- Basic View -->
-                        <div id="algoBasicView" class="flex-1 flex flex-col">
-                            <h3 class="text-sm font-bold text-gray-800 bg-gray-200 px-3 py-1 rounded-t-md">알고리즘 (순서)</h3>
-                            <pre id="algoTextDisplay" class="flex-1 bg-gray-50 p-3 rounded-b-md border border-t-0 text-sm whitespace-pre-wrap font-mono text-gray-700 overflow-y-auto leading-relaxed"></pre>
+                        <!-- Main Condition text -->
+                        <div>
+                            <label class="block text-xs text-gray-600 mb-1">조건 (예: 빵이 구워졌는가?)</label>
+                            <input type="text" id="condMainText" class="w-full border-gray-300 rounded-md p-2 border text-sm" placeholder="조건문 입력">
                         </div>
- 
-                        <!-- Advanced View -->
-                        <div id="algoAdvancedView" class="hidden flex-1 flex flex-col relative">
-                            <div class="flex justify-between items-center bg-gray-200 px-3 py-1 rounded-t-md">
-                                <h3 class="text-sm font-bold text-gray-800">스스로 알고리즘 작성</h3>
-                                <button id="hintBtn" class="text-xs bg-yellow-400 hover:bg-yellow-500 text-black px-2 py-1 rounded shadow font-bold transition">힌트 보기 (2초)</button>
-                            </div>
-                            <textarea id="algoStudentInput" class="flex-1 w-full border border-t-0 border-gray-300 rounded-b-md p-3 text-sm font-mono leading-relaxed resize-none focus:ring-primary focus:border-primary" placeholder="문제를 해결하기 위한 알고리즘을 1번부터 차례대로 번호를 매겨 작성해 보세요."></textarea>
- 
-                            <!-- Hint Overlay -->
-                            <div id="hintOverlay" class="hidden absolute top-10 left-2 right-2 bg-yellow-50 border-2 border-yellow-400 p-4 rounded-lg shadow-xl z-20">
-                                <p class="text-xs font-bold text-yellow-800 mb-2">선생님의 힌트!</p>
-                                <pre id="hintTextDisplay" class="text-sm whitespace-pre-wrap font-mono text-gray-800"></pre>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- COLUMN 2: Flowchart Node Builder -->
-                <div class="w-full md:w-1/3 flex flex-col border-r bg-gray-50 p-4 overflow-hidden">
-                    <h3 class="text-lg font-bold text-gray-800 mb-2 flex items-center gap-2">
-                        <svg class="w-5 h-5 text-secondary" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4"></path></svg>
-                        순서도 조립하기
-                    </h3>
-                    <p class="text-xs text-gray-500 mb-4">각 단계를 번호에 맞게 추가하고 연결해보세요.</p>
-
-                    <!-- Input Form -->
-                    <div class="bg-white p-3 rounded-lg border shadow-sm mb-4 shrink-0">
-                        <div class="grid grid-cols-2 gap-2 mb-2">
-                            <div>
-                                <label class="block text-xs font-bold text-gray-700 mb-1">단계 번호</label>
-                                <input type="number" id="nodeId" class="w-full border border-gray-300 rounded p-1.5 text-center font-bold text-blue-600 bg-blue-50" min="1" title="수정하려면 기존 번호를 입력하세요">
-                            </div>
-                            <div>
-                                <label class="block text-xs font-bold text-gray-700 mb-1">도형 종류</label>
-                                <select id="nodeType" class="w-full border border-gray-300 rounded p-1.5 text-sm">
-                                    <option value="terminal">단말 (시작/종료)</option>
-                                    <option value="prepare">준비 (변수/초기화)</option>
-                                    <option value="process">처리 (작업 명시)</option>
-                                    <option value="io">입출력 (입력/출력)</option>
-                                    <option value="decision">비교/판단 (조건)</option>
+                        
+                        <!-- True Action -->
+                        <div>
+                            <label class="block text-xs text-blue-600 mb-1 font-semibold">참(Yes)일 때 행동</label>
+                            <div class="flex gap-2">
+                                <select id="condTrueShape" class="w-1/3 border-blue-200 rounded-md p-2 border text-sm bg-blue-50 text-blue-800 outline-none focus:ring-1 focus:ring-blue-500">
+                                    <option value="process">처리 (직사각형)</option>
+                                    <option value="terminal">단말 (타원)</option>
+                                    <option value="prepare">준비 (육각형)</option>
+                                    <option value="io">입출력 (평행사변형)</option>
                                 </select>
+                                <input type="text" id="condTrueText" class="flex-1 w-full border-blue-200 rounded-md p-2 border text-sm bg-blue-50" placeholder="예: 잼을 바른다">
                             </div>
                         </div>
 
-                        <div class="mb-2">
-                            <label class="block text-xs font-bold text-gray-700 mb-1">내용 입력</label>
-                            <input type="text" id="nodeText" class="w-full border border-gray-300 rounded p-1.5 text-sm focus:ring-secondary focus:border-secondary" placeholder="예: 토스트기에 전원을 연결한다.">
-                        </div>
-
-                        <!-- Connection Links -->
-                        <div class="bg-gray-50 p-2 rounded border mt-3">
-                            <label class="block text-xs font-bold text-gray-700 mb-2 border-b pb-1">화살표 연결 (다음 이동할 번호)</label>
- 
-                            <!-- Standard Link -->
-                            <div id="standardLinkGroup" class="flex items-center gap-2">
-                                <span class="text-sm whitespace-nowrap">다음 번호:</span>
-                                <input type="number" id="nodeNext" class="w-16 border border-gray-300 rounded p-1 text-center text-sm" placeholder="번호">
-                                <span class="text-xs text-gray-500">(없으면 비워두기)</span>
-                            </div>
-
-                            <!-- Condition Links -->
-                            <div id="conditionLinkGroup" class="hidden flex-col gap-2">
-                                <select id="nodeCondType" class="w-full border border-gray-300 rounded p-1 text-xs mb-1">
-                                    <option value="if\_else">IF ~ ELSE (참/거짓 모두 연결)</option>
-                                    <option value="if">IF (참일 때만 연결)</option>
+                        <!-- False Action (only for if-else, else-if) -->
+                        <div id="condFalseGroup" class="hidden">
+                            <label id="condFalseLabel" class="block text-xs text-red-600 mb-1 font-semibold">거짓(No)일 때 행동</label>
+                            <div class="flex gap-2">
+                                <select id="condFalseShape" class="w-1/3 border-red-200 rounded-md p-2 border text-sm bg-red-50 text-red-800 outline-none focus:ring-1 focus:ring-red-500">
+                                    <option value="process">처리 (직사각형)</option>
+                                    <option value="terminal">단말 (타원)</option>
+                                    <option value="prepare">준비 (육각형)</option>
+                                    <option value="io">입출력 (평행사변형)</option>
                                 </select>
-                                <div class="flex items-center gap-2">
-                                    <span class="text-sm whitespace-nowrap font-bold text-blue-600">참(Yes):</span>
-                                    <input type="number" id="nodeTrueNext" class="w-16 border border-blue-300 rounded p-1 text-center text-sm bg-blue-50" placeholder="번호">
-                                    <span class="text-xs text-gray-500">번으로 이동</span>
-                                </div>
-                                <div id="falseLinkWrapper" class="flex items-center gap-2">
-                                    <span class="text-sm whitespace-nowrap font-bold text-red-600">거짓(No):</span>
-                                    <input type="number" id="nodeFalseNext" class="w-16 border border-red-300 rounded p-1 text-center text-sm bg-red-50" placeholder="번호">
-                                    <span class="text-xs text-gray-500">번으로 이동</span>
-                                </div>
+                                <input type="text" id="condFalseText" class="flex-1 w-full border-red-200 rounded-md p-2 border text-sm bg-red-50" placeholder="예: 접시에 담는다">
                             </div>
                         </div>
-
-                        <div class="mt-3 flex gap-2">
-                            <button onclick="addOrUpdateNode()" class="flex-1 bg-secondary hover:bg-emerald-600 text-white font-bold py-2 px-2 rounded shadow transition text-sm">
-                                저장 / 모양 추가
-                            </button>
-                            <button onclick="resetForm()" class="bg-gray-200 hover:bg-gray-300 text-gray-700 font-bold py-2 px-3 rounded shadow transition text-sm">
-                                비우기
-                            </button>
-                        </div>
                     </div>
 
-                    <!-- List of Added Nodes -->
-                    <div class="flex-1 flex flex-col bg-white border rounded-lg shadow-sm overflow-hidden">
-                        <div class="bg-gray-100 px-3 py-2 border-b flex justify-between items-center">
-                            <h4 class="text-sm font-bold text-gray-700">작성된 단계 목록</h4>
-                            <button onclick="clearAllNodes()" class="text-xs text-red-500 hover:underline">전체 삭제</button>
-                        </div>
-                        <div class="flex-1 overflow-y-auto p-2">
-                            <ul id="nodeList" class="space-y-2">
-                                <!-- Nodes rendered here -->
-                            </ul>
-                        </div>
-                    </div>
+                    <button id="btnAddShape" class="w-full bg-secondary hover:bg-emerald-600 text-white py-2 rounded-md font-medium transition-colors mt-2 shadow-sm">순서도에 추가 ➔</button>
+                </div>
+                
+                <div class="mt-auto pt-4 border-t border-gray-200">
+                     <button id="btnResetFlowchart" class="w-full bg-white border border-gray-300 hover:bg-gray-50 text-gray-700 py-2 rounded-md text-sm font-medium transition-colors mb-2">순서도 초기화</button>
                 </div>
 
-                <!-- COLUMN 3: Live Canvas (Mermaid rendering) -->
-                <div class="w-full md:flex-1 bg-white flex flex-col relative">
-                    <div class="absolute top-4 right-4 z-10">
-                        <button onclick="downloadGraph()" class="bg-primary hover:bg-blue-600 text-white font-bold py-2 px-4 rounded-lg shadow-md transition flex items-center gap-2">
-                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
-                            순서도 이미지 저장
-                        </button>
-                    </div>
-                    <div class="flex-1 overflow-auto p-6 flex justify-center items-start" id="canvasContainer">
-                        <div id="graphPlaceholder" class="text-gray-400 text-center mt-20 flex flex-col items-center">
-                            <svg class="w-16 h-16 mb-2 opacity-50" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 5a1 1 0 011-1h14a1 1 0 011 1v2a1 1 0 01-1 1H5a1 1 0 01-1-1V5zM4 13a1 1 0 011-1h6a1 1 0 011 1v6a1 1 0 01-1 1H5a1 1 0 01-1-1v-6zM16 13a1 1 0 011-1h2a1 1 0 011 1v6a1 1 0 01-1 1h-2a1 1 0 01-1-1v-6z"></path></svg>
-                            단계를 추가하면 여기에 순서도가 실시간으로 그려집니다.
-                        </div>
-                        <div id="mermaidTarget" class="w-full flex justify-center"></div>
-                    </div>
-                </div>
+            </div>
+        </div>
 
+        <!-- Column 3: Canvas -->
+        <div class="w-full md:w-1/3 bg-canvasbg flex flex-col h-1/3 md:h-full relative min-h-[300px]">
+            <div class="p-4 border-b border-gray-200 bg-white flex justify-between items-center z-10 shadow-sm shrink-0">
+                <h2 class="font-bold text-gray-700">3단계: 시뮬레이션 결과</h2>
+                <button id="btnDownload" class="bg-indigo-50 text-primary border border-indigo-200 hover:bg-indigo-100 px-3 py-1.5 rounded-md text-sm font-medium transition-colors flex items-center gap-1">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg> <span class="hidden sm:inline">이미지 저장</span>
+                </button>
+            </div>
+            <div class="flex-1 overflow-auto custom-scrollbar relative p-4 flex justify-center bg-gray-50" id="canvasContainer">
+                <canvas id="flowchartCanvas" class="bg-white shadow-sm border border-gray-200 rounded-lg block"></canvas>
             </div>
         </div>
     </main>
 
-    <!-- Custom Modal for Alerts/Prompts -->
-    <div id="customModal" class="hidden fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center">
-        <div class="bg-white rounded-xl shadow-2xl p-6 max-w-sm w-full transform transition-all scale-95 opacity-0 duration-200" id="modalContent">
-            <h3 id="modalTitle" class="text-lg font-bold mb-2">알림</h3>
-            <p id="modalMessage" class="text-gray-600 mb-6 text-sm"></p>
- 
-            <!-- Password Input for Admin -->
-            <input type="password" id="modalInput" class="hidden w-full border border-gray-300 rounded p-2 mb-4 text-center tracking-widest" placeholder="비밀번호 4자리">
- 
-            <div class="flex justify-end gap-2" id="modalButtons">
-                <button id="modalBtnCancel" class="hidden px-4 py-2 bg-gray-200 hover:bg-gray-300 rounded text-gray-700 font-bold transition">취소</button>
-                <button id="modalBtnConfirm" class="px-4 py-2 bg-primary hover:bg-blue-600 text-white rounded font-bold transition">확인</button>
+    <!-- Custom Modal System (replaces alert/prompt) -->
+    <div id="customModal" class="fixed inset-0 bg-black/50 hidden z-50 flex items-center justify-center modal-overlay">
+        <div class="bg-white rounded-xl shadow-xl w-96 max-w-[90%] overflow-hidden modal-content">
+            <div id="modalHeader" class="px-6 py-4 border-b border-gray-100 flex items-center gap-3">
+                <div id="modalIcon" class="w-8 h-8 rounded-full flex items-center justify-center shrink-0"></div>
+                <h3 id="modalTitle" class="text-lg font-bold text-gray-800">알림</h3>
+            </div>
+            <div class="px-6 py-4">
+                <p id="modalMessage" class="text-gray-600 text-sm whitespace-pre-wrap"></p>
+                <div id="modalInputContainer" class="mt-4 hidden">
+                    <input type="password" id="modalInput" class="w-full border-gray-300 rounded-md p-2 border focus:ring-primary focus:border-primary text-center" placeholder="비밀번호 입력">
+                    <p id="modalError" class="text-red-500 text-xs mt-1 hidden">비밀번호가 틀렸습니다.</p>
+                </div>
+            </div>
+            <div class="px-6 py-4 bg-gray-50 flex justify-end gap-2 border-t border-gray-100">
+                <button id="modalBtnCancel" class="px-4 py-2 rounded-md bg-white border border-gray-300 text-gray-700 hover:bg-gray-50 text-sm font-medium hidden">취소</button>
+                <button id="modalBtnConfirm" class="px-4 py-2 rounded-md bg-primary hover:bg-indigo-700 text-white text-sm font-medium shadow-sm">확인</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Image Modal for Completion -->
+    <div id="imageModal" class="fixed inset-0 bg-black/80 hidden z-[60] flex items-center justify-center modal-overlay p-4">
+        <div class="bg-white p-2 rounded-xl shadow-2xl max-w-full max-h-full flex flex-col modal-content relative">
+            <div class="flex justify-between items-center p-3 border-b">
+                <h3 class="text-xl font-bold text-gray-800">🎉 순서도 완성! 🎉</h3>
+                <button id="btnCloseImageModal" class="text-gray-500 hover:text-gray-800 transition-colors">
+                    <svg class="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                </button>
+            </div>
+            <div class="overflow-auto flex-1 p-4 bg-gray-50 flex justify-center custom-scrollbar">
+                <img id="completedImage" src="" alt="완성된 순서도" class="max-w-full object-contain rounded border border-gray-200 bg-white">
+            </div>
+            <div class="p-4 bg-gray-100 rounded-b-xl flex justify-center border-t border-gray-200">
+                <button id="btnDownloadFromModal" class="bg-primary hover:bg-indigo-700 text-white px-8 py-2.5 rounded-md font-bold shadow-md transition-colors flex items-center gap-2">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg> 이미지 내PC 저장
+                </button>
             </div>
         </div>
     </div>
 
     <script>
-        // --- Data & State ---
+        // --- State Management ---
+        const AppState = {
+            isAdmin: false,
+            difficulty: 'basic', // basic, advanced
+            problems: [],
+            currentProblemIndex: 0,
+            flowchartNodes: [], // User built flowchart
+            canvasWidth: 600,
+            canvasHeight: 800
+        };
+
+        // Default Problem Data
         const defaultProblems = [
             {
                 title: "토스트에 빵굽기",
                 description: "토스트기를 이용하여 맛있는 식빵을 구워보자.",
-                algorithm: "1. 시작\n2. 빵, 토스트기 준비\n3. 토스트기에 전원을 연결한다.\n4. 토스트기에 타이머를 설정한다.\n5. 토스트기에 빵이 구워졌는가?\n6. 참이면 잼을 바를 것인가?\n7. 참이면 잼을 바른다.\n8. 아니면 접시에 빵을 담는다.\n9. 종료"
+                algorithm: "1. 시작\n2. 빵, 토스트기\n3. 토스트기에 전원을 연결한다.\n4. 타이머를 설정한다.\n5. 빵이 구워졌는가?\n6. 참이면 빵을 꺼낸다.\n7. 잼을 바를 것인가?\n8. 참이면 잼을 바른다.\n9. 아니면 그냥 접시에 담는다.\n10. 종료"
             },
             {
                 title: "횡단보도 건너기",
                 description: "안전하게 횡단보도를 건너는 방법을 순서도로 만들어보자.",
-                algorithm: "1. 시작\n2. 횡단보도 앞에 선다.\n3. 신호등이 녹색인가?\n4. 참이면 좌우를 살피며 건넌다.\n5. 아니면 기다린다.\n6. 무사히 건넜는가?\n7. 참이면 종료\n8. 아니면 3번(신호등 확인)으로 돌아간다."
+                algorithm: "1. 시작\n2. 횡단보도 앞에 선다.\n3. 신호등이 녹색인가?\n4. 참이면 좌우를 살피며 건넌다.\n5. 아니면 기다린다.\n6. 무사히 건넜는가?\n7. 참이면 종료\n8. 아니면 3번으로 돌아간다."
             }
         ];
 
-        let AppState = {
-            problems: [],
-            currentProblemIndex: 0,
-            flowchartNodes: [] // Array of { id, type, text, next, trueNext, falseNext, condType }
+        // Constants for Shapes
+        const ShapeTypes = {
+            TERMINAL: 'terminal',
+            PREPARE: 'prepare',
+            PROCESS: 'process',
+            IO: 'io',
+            DECISION: 'decision'
         };
 
-        const shapeLabels = {
-            'terminal': '단말 (시작/종료)',
-            'prepare': '준비',
-            'process': '처리',
-            'io': '입출력',
-            'decision': '조건 (판단)'
+        const ShapeStyles = {
+            [ShapeTypes.TERMINAL]: { bg: '#FEE2E2', border: '#EF4444', text: '#991B1B' }, // Red-ish
+            [ShapeTypes.PREPARE]: { bg: '#E0E7FF', border: '#4F46E5', text: '#3730A3' },   // Indigo-ish
+            [ShapeTypes.PROCESS]: { bg: '#D1FAE5', border: '#10B981', text: '#065F46' },   // Emerald-ish
+            [ShapeTypes.IO]: { bg: '#EDE9FE', border: '#8B5CF6', text: '#5B21B6' },        // Purple-ish
+            [ShapeTypes.DECISION]: { bg: '#FEF3C7', border: '#F59E0B', text: '#92400E' }   // Amber-ish
         };
 
         // --- DOM Elements ---
         const els = {
-            btnStudentMode: document.getElementById('btnStudentMode'),
+            btnClassMode: document.getElementById('btnClassMode'),
             btnAdminMode: document.getElementById('btnAdminMode'),
-            studentView: document.getElementById('studentView'),
-            adminView: document.getElementById('adminView'),
- 
+            classTopBar: document.getElementById('classTopBar'),
+            adminTopBar: document.getElementById('adminTopBar'),
             programSelect: document.getElementById('programSelect'),
-            programDescDisplay: document.getElementById('programDescDisplay'),
-            difficultySelect: document.getElementById('difficultySelect'),
-            algoBasicView: document.getElementById('algoBasicView'),
-            algoAdvancedView: document.getElementById('algoAdvancedView'),
-            algoTextDisplay: document.getElementById('algoTextDisplay'),
-            hintBtn: document.getElementById('hintBtn'),
+            studentName: document.getElementById('studentName'),
+            adminTitle: document.getElementById('adminTitle'),
+            btnSaveProblem: document.getElementById('btnSaveProblem'),
+            btnDeleteProblem: document.getElementById('btnDeleteProblem'),
+            programDescription: document.getElementById('programDescription'),
+            adminDescription: document.getElementById('adminDescription'),
+            difficultyRadios: document.getElementsByName('difficulty'),
+            basicAlgorithmText: document.getElementById('basicAlgorithmText'),
+            basicAlgorithmWrapper: document.getElementById('basicAlgorithmWrapper'),
+            advancedAlgorithmView: document.getElementById('advancedAlgorithmView'),
+            studentAlgorithmInput: document.getElementById('studentAlgorithmInput'),
+            btnHint: document.getElementById('btnHint'),
             hintOverlay: document.getElementById('hintOverlay'),
-            hintTextDisplay: document.getElementById('hintTextDisplay'),
- 
-            nodeId: document.getElementById('nodeId'),
-            nodeType: document.getElementById('nodeType'),
-            nodeText: document.getElementById('nodeText'),
-            standardLinkGroup: document.getElementById('standardLinkGroup'),
-            conditionLinkGroup: document.getElementById('conditionLinkGroup'),
-            nodeNext: document.getElementById('nodeNext'),
-            nodeCondType: document.getElementById('nodeCondType'),
-            nodeTrueNext: document.getElementById('nodeTrueNext'),
-            nodeFalseNext: document.getElementById('nodeFalseNext'),
-            falseLinkWrapper: document.getElementById('falseLinkWrapper'),
- 
-            nodeList: document.getElementById('nodeList'),
-            graphPlaceholder: document.getElementById('graphPlaceholder'),
-            mermaidTarget: document.getElementById('mermaidTarget')
+            hintText: document.getElementById('hintText'),
+            classAlgorithmView: document.getElementById('classAlgorithmView'),
+            adminAlgorithmView: document.getElementById('adminAlgorithmView'),
+            adminAlgorithmInput: document.getElementById('adminAlgorithmInput'),
+            adminBlockerOverlay: document.getElementById('adminBlockerOverlay'),
+            shapeSelect: document.getElementById('shapeSelect'),
+            shapeDesc: document.getElementById('shapeDesc'),
+            shapeInputArea: document.getElementById('shapeInputArea'),
+            standardInputGroup: document.getElementById('standardInputGroup'),
+            conditionInputGroup: document.getElementById('conditionInputGroup'),
+            conditionTypeSelect: document.getElementById('conditionTypeSelect'),
+            condFalseGroup: document.getElementById('condFalseGroup'),
+            standardTextInput: document.getElementById('standardTextInput'),
+            condMainText: document.getElementById('condMainText'),
+            condTrueShape: document.getElementById('condTrueShape'),
+            condTrueText: document.getElementById('condTrueText'),
+            condFalseShape: document.getElementById('condFalseShape'),
+            condFalseText: document.getElementById('condFalseText'),
+            btnAddShape: document.getElementById('btnAddShape'),
+            btnResetFlowchart: document.getElementById('btnResetFlowchart'),
+            btnDownload: document.getElementById('btnDownload'),
+            canvas: document.getElementById('flowchartCanvas'),
+            canvasContainer: document.getElementById('canvasContainer'),
+            
+            // Image Modal
+            imageModal: document.getElementById('imageModal'),
+            completedImage: document.getElementById('completedImage'),
+            btnCloseImageModal: document.getElementById('btnCloseImageModal'),
+            btnDownloadFromModal: document.getElementById('btnDownloadFromModal')
         };
 
-        // --- Initialization ---
-        function init() {
-            // Load problems from local storage or use defaults
-            const savedProblems = localStorage.getItem('algoProblems');
-            if (savedProblems) {
-                try {
-                    AppState.problems = JSON.parse(savedProblems);
-                } catch(e) {
-                    AppState.problems = [...defaultProblems];
+        const ctx = els.canvas.getContext('2d');
+
+        // --- Modal Utility ---
+        const Modal = {
+            show: function(title, message, type = 'info', inputCallback = null) {
+                const modal = document.getElementById('customModal');
+                const titleEl = document.getElementById('modalTitle');
+                const msgEl = document.getElementById('modalMessage');
+                const iconEl = document.getElementById('modalIcon');
+                const inputCont = document.getElementById('modalInputContainer');
+                const inputEl = document.getElementById('modalInput');
+                const errorEl = document.getElementById('modalError');
+                const btnCancel = document.getElementById('modalBtnCancel');
+                const btnConfirm = document.getElementById('modalBtnConfirm');
+
+                titleEl.textContent = title;
+                msgEl.textContent = message;
+                inputCont.classList.add('hidden');
+                btnCancel.classList.add('hidden');
+                errorEl.classList.add('hidden');
+                inputEl.value = '';
+
+                // Style based on type
+                iconEl.className = 'w-8 h-8 rounded-full flex items-center justify-center shrink-0';
+                if (type === 'error') {
+                    iconEl.classList.add('bg-red-100', 'text-red-500');
+                    iconEl.innerHTML = '<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>';
+                } else if (type === 'success') {
+                    iconEl.classList.add('bg-green-100', 'text-green-500');
+                    iconEl.innerHTML = '<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>';
+                } else if (type === 'prompt') {
+                    iconEl.classList.add('bg-blue-100', 'text-blue-500');
+                    iconEl.innerHTML = '<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path></svg>';
+                    inputCont.classList.remove('hidden');
+                    btnCancel.classList.remove('hidden');
+                    setTimeout(() => inputEl.focus(), 100);
+                } else if (type === 'confirm') {
+                    iconEl.classList.add('bg-yellow-100', 'text-yellow-600');
+                    iconEl.innerHTML = '<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>';
+                    btnCancel.classList.remove('hidden');
+                } else {
+                    iconEl.classList.add('bg-gray-100', 'text-gray-500');
+                    iconEl.innerHTML = '<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>';
                 }
-            } else {
+
+                modal.classList.remove('hidden');
+
+                const cleanup = () => {
+                    modal.classList.add('hidden');
+                    btnConfirm.onclick = null;
+                    btnCancel.onclick = null;
+                    inputEl.onkeydown = null;
+                };
+
+                btnCancel.onclick = () => { cleanup(); if(type === 'prompt' && inputCallback) inputCallback(null); };
+                
+                btnConfirm.onclick = () => {
+                    if (type === 'prompt') {
+                        if (inputCallback) {
+                            const isValid = inputCallback(inputEl.value);
+                            if (isValid === false) {
+                                errorEl.classList.remove('hidden');
+                                inputEl.focus();
+                                return; // Don't close
+                            }
+                        }
+                    } else if (type === 'confirm') {
+                        if (inputCallback) inputCallback();
+                    }
+                    cleanup();
+                };
+
+                inputEl.onkeydown = (e) => { if (e.key === 'Enter') btnConfirm.click(); };
+            }
+        };
+
+        // --- Initialization and Events ---
+        function init() {
+            loadProblems();
+            setupEventListeners();
+            updateDifficultyUI(); // Set initial difficulty view
+            
+            // Initial canvas setup
+            setTimeout(() => {
+                resizeCanvas();
+                drawCanvas();
+            }, 100); // Give DOM time to lay out
+            
+            window.addEventListener('resize', () => {
+                resizeCanvas();
+                drawCanvas();
+            });
+        }
+
+        function loadProblems() {
+            try {
+                const stored = localStorage.getItem('flowchart_problems_v2');
+                if (stored) {
+                    AppState.problems = JSON.parse(stored);
+                } else {
+                    AppState.problems = [...defaultProblems];
+                    saveProblems();
+                }
+            } catch (e) {
                 AppState.problems = [...defaultProblems];
             }
-
             populateProgramSelect();
-            bindEvents();
-            switchMode('student');
- 
-            // Generate first ID
-            suggestNextNodeId();
         }
 
         function saveProblems() {
-            localStorage.setItem('algoProblems', JSON.stringify(AppState.problems));
+            localStorage.setItem('flowchart_problems_v2', JSON.stringify(AppState.problems));
         }
 
-        // --- Event Binding ---
-        function bindEvents() {
-            els.btnStudentMode.addEventListener('click', () => switchMode('student'));
+        function populateProgramSelect() {
+            els.programSelect.innerHTML = '';
+            AppState.problems.forEach((p, idx) => {
+                const option = document.createElement('option');
+                option.value = idx;
+                option.textContent = p.title;
+                els.programSelect.appendChild(option);
+            });
+            
+            if (AppState.currentProblemIndex >= AppState.problems.length) {
+                AppState.currentProblemIndex = 0;
+            }
+            
+            els.programSelect.value = AppState.currentProblemIndex;
+            loadCurrentProblem();
+        }
+
+        function setupEventListeners() {
+            // Mode Switching
+            els.btnClassMode.addEventListener('click', () => setMode(false));
             els.btnAdminMode.addEventListener('click', () => {
-                Modal.prompt('관리자 인증', '관리자 비밀번호를 입력하세요.', (pwd) => {
+                if(AppState.isAdmin) return; // already admin
+                Modal.show('관리자 인증', '관리자 비밀번호를 입력하세요. (기본: 1234)', 'prompt', (pwd) => {
                     if (pwd === '1234') {
-                        switchMode('admin');
+                        setMode(true);
+                        return true; 
                     } else {
-                        Modal.show('오류', '비밀번호가 틀렸습니다.', 'error');
+                        return false; 
                     }
                 });
             });
 
+            // Program Selection
             els.programSelect.addEventListener('change', (e) => {
-                AppState.currentProblemIndex = e.target.selectedIndex;
-                updateProblemDisplay();
-                clearAllNodes(); // Clear canvas when changing problems
+                AppState.currentProblemIndex = parseInt(e.target.value, 10);
+                loadCurrentProblem();
             });
 
-            els.difficultySelect.addEventListener('change', (e) => {
-                if (e.target.value === 'basic') {
-                    els.algoBasicView.classList.remove('hidden');
-                    els.algoAdvancedView.classList.add('hidden');
-                } else {
-                    els.algoBasicView.classList.add('hidden');
-                    els.algoAdvancedView.classList.remove('hidden');
+            // Name Input - redraw canvas to update watermark
+            els.studentName.addEventListener('input', () => {
+                drawCanvas();
+            });
+
+            // Difficulty
+            Array.from(els.difficultyRadios).forEach(radio => {
+                radio.addEventListener('change', (e) => {
+                    AppState.difficulty = e.target.value;
+                    updateDifficultyUI();
+                });
+            });
+
+            // Hint Logic (Toggle on click, auto hide after 2s)
+            let hintTimeout;
+            els.btnHint.addEventListener('click', (e) => {
+                e.preventDefault();
+                const prob = AppState.problems[AppState.currentProblemIndex];
+                if(prob) {
+                    els.hintText.textContent = prob.algorithm;
+                    els.hintOverlay.classList.remove('hidden');
+                    clearTimeout(hintTimeout);
+                    hintTimeout = setTimeout(() => {
+                        els.hintOverlay.classList.add('hidden');
+                    }, 2000); 
                 }
             });
 
-            els.hintBtn.addEventListener('mousedown', () => { els.hintOverlay.classList.remove('hidden'); });
-            els.hintBtn.addEventListener('mouseup', () => { els.hintOverlay.classList.add('hidden'); });
-            els.hintBtn.addEventListener('mouseleave', () => { els.hintOverlay.classList.add('hidden'); });
- 
-            // Touch support for hints
-            els.hintBtn.addEventListener('touchstart', (e) => { e.preventDefault(); els.hintOverlay.classList.remove('hidden'); });
-            els.hintBtn.addEventListener('touchend', (e) => { e.preventDefault(); els.hintOverlay.classList.add('hidden'); });
+            // Admin Actions
+            els.btnSaveProblem.addEventListener('click', saveAdminProblem);
+            els.btnDeleteProblem.addEventListener('click', deleteAdminProblem);
 
-            els.nodeType.addEventListener('change', handleNodeTypeChange);
-            els.nodeCondType.addEventListener('change', handleCondTypeChange);
+            // Shape Menu Interactions
+            els.shapeSelect.addEventListener('change', handleShapeSelection);
+            els.conditionTypeSelect.addEventListener('change', handleConditionTypeChange);
+
+            // Flowchart Actions
+            els.btnAddShape.addEventListener('click', addShapeToFlowchart);
+            els.btnResetFlowchart.addEventListener('click', () => {
+                // 항상 시작 도형을 기본으로 둠
+                AppState.flowchartNodes = [{ type: ShapeTypes.TERMINAL, id: Date.now(), text: '시작' }];
+                drawCanvas();
+            });
+
+            // Download & Image Modal
+            els.btnDownload.addEventListener('click', downloadCanvas);
+            els.btnCloseImageModal.addEventListener('click', () => { els.imageModal.classList.add('hidden'); });
+            els.btnDownloadFromModal.addEventListener('click', () => { 
+                els.imageModal.classList.add('hidden');
+                downloadCanvas(); 
+            });
         }
 
-        function switchMode(mode) {
-            if (mode === 'student') {
-                els.adminView.classList.add('hidden');
-                els.studentView.classList.remove('hidden');
- 
-                els.btnStudentMode.classList.replace('bg-gray-100', 'bg-white');
-                els.btnStudentMode.classList.replace('text-gray-500', 'text-primary');
-                els.btnStudentMode.classList.add('shadow');
- 
-                els.btnAdminMode.classList.replace('bg-white', 'transparent');
-                els.btnAdminMode.classList.replace('text-admin', 'text-gray-500');
-                els.btnAdminMode.classList.remove('shadow');
- 
-                updateProblemDisplay();
+        // --- UI Update Logic ---
+        function setMode(isAdmin) {
+            AppState.isAdmin = isAdmin;
+            
+            if (isAdmin) {
+                els.btnAdminMode.classList.replace('text-gray-500', 'bg-admin');
+                els.btnAdminMode.classList.replace('hover:bg-gray-200', 'text-white');
+                els.btnAdminMode.classList.add('shadow-sm');
+                
+                els.btnClassMode.classList.remove('bg-white', 'shadow-sm', 'text-primary');
+                els.btnClassMode.classList.add('text-gray-500', 'hover:bg-gray-200');
             } else {
-                els.studentView.classList.add('hidden');
-                els.adminView.classList.remove('hidden');
- 
-                els.btnAdminMode.classList.replace('bg-gray-100', 'bg-white');
-                els.btnAdminMode.classList.replace('text-gray-500', 'text-admin');
-                els.btnAdminMode.classList.add('shadow');
- 
-                els.btnStudentMode.classList.replace('bg-white', 'transparent');
-                els.btnStudentMode.classList.replace('text-primary', 'text-gray-500');
-                els.btnStudentMode.classList.remove('shadow');
- 
-                // Populate admin fields with current problem
-                const prob = AppState.problems[AppState.currentProblemIndex];
-                if (prob) {
-                    document.getElementById('adminTitle').value = prob.title;
-                    document.getElementById('adminDescription').value = prob.description;
-                    document.getElementById('adminAlgorithmInput').value = prob.algorithm;
-                }
+                els.btnClassMode.classList.remove('text-gray-500', 'hover:bg-gray-200');
+                els.btnClassMode.classList.add('bg-white', 'shadow-sm', 'text-primary');
+
+                els.btnAdminMode.classList.replace('bg-admin', 'text-gray-500');
+                els.btnAdminMode.classList.replace('text-white', 'hover:bg-gray-200');
+                els.btnAdminMode.classList.remove('shadow-sm');
+            }
+
+            // Top bars
+            els.adminTopBar.classList.toggle('hidden', !isAdmin);
+            els.classTopBar.classList.toggle('hidden', isAdmin);
+
+            // Descriptions
+            els.programDescription.classList.toggle('hidden', isAdmin);
+            els.adminDescription.classList.toggle('hidden', !isAdmin);
+
+            // Views
+            els.classAlgorithmView.classList.toggle('hidden', isAdmin);
+            els.adminAlgorithmView.classList.toggle('hidden', !isAdmin);
+            document.getElementById('difficultySelector').classList.toggle('hidden', isAdmin);
+
+            // Flowchart Blocker
+            els.adminBlockerOverlay.classList.toggle('hidden', !isAdmin);
+
+            if (isAdmin) {
+                const prob = AppState.problems[AppState.currentProblemIndex] || {title:'', description:'', algorithm:''};
+                els.adminTitle.value = prob.title;
+                els.adminDescription.value = prob.description;
+                els.adminAlgorithmInput.value = prob.algorithm;
+            } else {
+                loadCurrentProblem();
+            }
+            
+            drawCanvas(); // Redraw to add/remove watermark
+        }
+
+        function updateDifficultyUI() {
+            if (AppState.difficulty === 'basic') {
+                els.basicAlgorithmWrapper.classList.remove('hidden');
+                els.advancedAlgorithmView.classList.add('hidden');
+            } else {
+                els.basicAlgorithmWrapper.classList.add('hidden');
+                els.advancedAlgorithmView.classList.remove('hidden');
             }
         }
 
-        // --- Problem Management ---
-        function populateProgramSelect() {
-            els.programSelect.innerHTML = '';
-            AppState.problems.forEach((p, idx) => {
-                const opt = document.createElement('option');
-                opt.value = idx;
-                opt.textContent = p.title;
-                els.programSelect.appendChild(opt);
-            });
-            els.programSelect.selectedIndex = AppState.currentProblemIndex;
-            updateProblemDisplay();
-        }
-
-        function updateProblemDisplay() {
+        function loadCurrentProblem() {
             const prob = AppState.problems[AppState.currentProblemIndex];
             if (!prob) return;
- 
-            els.programDescDisplay.textContent = prob.description;
-            els.algoTextDisplay.textContent = prob.algorithm;
-            els.hintTextDisplay.textContent = prob.algorithm;
+            
+            els.programDescription.textContent = prob.description;
+            els.basicAlgorithmText.textContent = prob.algorithm;
+            els.studentAlgorithmInput.value = ''; // Reset student's input
+            
+            if (!AppState.isAdmin) {
+                // 시작 도형은 기본으로 셋팅
+                AppState.flowchartNodes = [{ type: ShapeTypes.TERMINAL, id: Date.now(), text: '시작' }];
+                els.shapeSelect.value = 'none';
+                handleShapeSelection();
+                drawCanvas();
+            }
         }
 
         function saveAdminProblem() {
-            const title = document.getElementById('adminTitle').value.trim();
-            const desc = document.getElementById('adminDescription').value.trim();
-            const algo = document.getElementById('adminAlgorithmInput').value.trim();
+            const title = els.adminTitle.value.trim();
+            const desc = els.adminDescription.value.trim();
+            const algo = els.adminAlgorithmInput.value.trim();
 
             if (!title || !algo) {
-                Modal.show('입력 오류', '프로그램 제목과 알고리즘은 필수입니다.', 'error');
+                Modal.show('오류', '문제 제목과 알고리즘 내용은 필수입니다.', 'error');
                 return;
             }
 
             const newProb = { title, description: desc, algorithm: algo };
- 
-            const existingIdx = AppState.problems.findIndex(p => p.title === title);
-            if (existingIdx >= 0) {
-                AppState.problems[existingIdx] = newProb;
-                AppState.currentProblemIndex = existingIdx;
+            
+            const existingIndex = AppState.problems.findIndex(p => p.title === title);
+            
+            if (existingIndex >= 0) {
+                AppState.problems[existingIndex] = newProb;
+                AppState.currentProblemIndex = existingIndex;
             } else {
                 AppState.problems.push(newProb);
                 AppState.currentProblemIndex = AppState.problems.length - 1;
             }
-
+            
             saveProblems();
             populateProgramSelect();
-            Modal.show('저장 완료', '문제가 성공적으로 저장되었습니다.', 'success');
-            switchMode('student');
+            Modal.show('성공', '문제가 성공적으로 저장되었습니다.', 'success');
         }
 
-        // --- Flowchart Node Builder Logic ---
-        function handleNodeTypeChange() {
-            const type = els.nodeType.value;
-            if (type === 'decision') {
-                els.standardLinkGroup.classList.add('hidden');
-                els.conditionLinkGroup.classList.remove('hidden');
-                els.conditionLinkGroup.classList.add('flex');
-            } else {
-                els.standardLinkGroup.classList.remove('hidden');
-                els.conditionLinkGroup.classList.add('hidden');
-                els.conditionLinkGroup.classList.remove('flex');
-            }
-        }
-
-        function handleCondTypeChange() {
-            if (els.nodeCondType.value === 'if') {
-                els.falseLinkWrapper.classList.add('hidden');
-                els.nodeFalseNext.value = '';
-            } else {
-                els.falseLinkWrapper.classList.remove('hidden');
-            }
-        }
-
-        function suggestNextNodeId() {
-            const ids = AppState.flowchartNodes.map(n => parseInt(n.id) || 0);
-            const maxId = ids.length > 0 ? Math.max(...ids) : 0;
-            els.nodeId.value = maxId + 1;
-        }
-
-        function resetForm() {
-            suggestNextNodeId();
-            els.nodeText.value = '';
-            els.nodeNext.value = '';
-            els.nodeTrueNext.value = '';
-            els.nodeFalseNext.value = '';
-            els.nodeType.value = 'process';
-            handleNodeTypeChange();
-        }
-
-        function addOrUpdateNode() {
-            const id = els.nodeId.value.trim();
-            const type = els.nodeType.value;
-            const text = els.nodeText.value.trim();
- 
-            if (!id || !text) {
-                Modal.show('알림', '단계 번호와 내용을 모두 입력해주세요.');
+        function deleteAdminProblem() {
+            if (AppState.problems.length <= 1) {
+                Modal.show('삭제 불가', '최소 1개의 문제는 남겨두어야 합니다.', 'error');
                 return;
             }
 
-            let newNode = { id, type, text, next: '', trueNext: '', falseNext: '', condType: 'if_else' };
+            Modal.show('문제 삭제', '현재 이 문제를 삭제하시겠습니까?\n삭제 후 복구할 수 없습니다.', 'confirm', () => {
+                AppState.problems.splice(AppState.currentProblemIndex, 1);
+                AppState.currentProblemIndex = 0;
+                saveProblems();
+                populateProgramSelect();
+                
+                // 삭제된 후 바뀐 문제 데이터를 폼에 렌더링
+                const prob = AppState.problems[AppState.currentProblemIndex];
+                els.adminTitle.value = prob.title;
+                els.adminDescription.value = prob.description;
+                els.adminAlgorithmInput.value = prob.algorithm;
 
-            if (type === 'decision') {
-                newNode.condType = els.nodeCondType.value;
-                newNode.trueNext = els.nodeTrueNext.value.trim();
-                if (newNode.condType === 'if_else') {
-                    newNode.falseNext = els.nodeFalseNext.value.trim();
-                }
-            } else {
-                newNode.next = els.nodeNext.value.trim();
-            }
-
-            // Check if updating
-            const existingIdx = AppState.flowchartNodes.findIndex(n => n.id === id);
-            if (existingIdx >= 0) {
-                AppState.flowchartNodes[existingIdx] = newNode;
-            } else {
-                AppState.flowchartNodes.push(newNode);
-            }
-
-            // Sort by ID for clean list
-            AppState.flowchartNodes.sort((a, b) => parseInt(a.id) - parseInt(b.id));
-
-            // Setup next defaults for fast data entry
-            let nextSuggest = parseInt(id) + 1;
- 
-            resetForm();
-            els.nodeId.value = nextSuggest; // override resetForm's suggestion to continue flow
-
-            updateUI();
-        }
-
-        function editNode(idStr) {
-            const node = AppState.flowchartNodes.find(n => n.id === idStr);
-            if (!node) return;
- 
-            els.nodeId.value = node.id;
-            els.nodeType.value = node.type;
-            els.nodeText.value = node.text;
- 
-            handleNodeTypeChange();
- 
-            if (node.type === 'decision') {
-                els.nodeCondType.value = node.condType || 'if_else';
-                handleCondTypeChange();
-                els.nodeTrueNext.value = node.trueNext;
-                els.nodeFalseNext.value = node.falseNext;
-            } else {
-                els.nodeNext.value = node.next;
-            }
-        }
-
-        function deleteNode(idStr) {
-            AppState.flowchartNodes = AppState.flowchartNodes.filter(n => n.id !== idStr);
-            updateUI();
-        }
-
-        function clearAllNodes() {
-            if(AppState.flowchartNodes.length === 0) return;
-            Modal.confirm('전체 삭제', '작성한 모든 순서도 도형을 지우시겠습니까?', () => {
-                AppState.flowchartNodes = [];
-                resetForm();
-                updateUI();
+                Modal.show('성공', '문제가 삭제되었습니다.', 'success');
             });
         }
 
-        function updateUI() {
-            renderNodeList();
-            renderMermaidGraph();
-        }
+        // --- Handling shape and canvas logic ---
+        function handleShapeSelection() {
+            const val = els.shapeSelect.value;
+            els.shapeInputArea.classList.remove('hidden', 'flex');
+            els.standardInputGroup.classList.add('hidden', 'flex');
+            els.conditionInputGroup.classList.add('hidden', 'flex');
 
-        // --- Node List Rendering ---
-        function renderNodeList() {
-            els.nodeList.innerHTML = '';
-            AppState.flowchartNodes.forEach(node => {
-                const li = document.createElement('li');
-                li.className = 'flex items-center justify-between bg-white border rounded p-2 text-sm hover:shadow-sm cursor-pointer border-l-4 transition-colors';
- 
-                // Color coding left border
-                if(node.type === 'terminal') li.classList.add('border-red-400');
-                else if(node.type === 'prepare') li.classList.add('border-indigo-400');
-                else if(node.type === 'process') li.classList.add('border-emerald-400');
-                else if(node.type === 'io') li.classList.add('border-purple-400');
-                else if(node.type === 'decision') li.classList.add('border-amber-400');
-
-                // Generate link text
-                let linkText = '';
-                if (node.type === 'decision') {
-                    linkText = `<span class="text-blue-600 ml-1">참➡\[${node.trueNext || '?'}]</span>`;
-                    if(node.condType !== 'if') {
-                        linkText += ` <span class="text-red-600 ml-1">거짓➡\[${node.falseNext || '?'}]</span>`;
-                    }
-                } else if (node.next) {
-                    linkText = `<span class="text-gray-500 ml-2">➡\[${node.next}]</span>`;
-                }
-
-                li.innerHTML = `
-                    <div class="flex-1 truncate pr-2" onclick="editNode('${node.id}')">
-                        <span class="font-bold text-gray-700 w-5 inline-block text-center mr-1">${node.id}.</span>
-                        <span class="text-xs px-1.5 py-0.5 rounded bg-gray-100 text-gray-600 mr-1">${shapeLabels[node.type]}</span>
-                        <span class="truncate">${node.text}</span>
-                        ${linkText}
-                    </div>
-                    <button onclick="deleteNode('${node.id}')" class="text-red-400 hover:text-red-600 p-1 bg-red-50 rounded" title="삭제">
-                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
-                    </button>
-                `;
-                els.nodeList.appendChild(li);
-            });
-        }
-
-        // --- Mermaid Graph Generation ---
-        function generateMermaidSyntax() {
-            let defs = "graph TD\n";
- 
-            // Custom Styling to match previous aesthetic
-            defs += "classDef terminal fill:#FEE2E2,stroke:#EF4444,stroke-width:2px,color:#991B1B;\n";
-            defs += "classDef prepare fill:#E0E7FF,stroke:#4F46E5,stroke-width:2px,color:#3730A3;\n";
-            defs += "classDef process fill:#D1FAE5,stroke:#10B981,stroke-width:2px,color:#065F46;\n";
-            defs += "classDef io fill:#EDE9FE,stroke:#8B5CF6,stroke-width:2px,color:#5B21B6;\n";
-            defs += "classDef decision fill:#FEF3C7,stroke:#F59E0B,stroke-width:2px,color:#92400E;\n\n";
-
-            const validIds = AppState.flowchartNodes.map(n => n.id);
-
-            // 1. Define Nodes
-            AppState.flowchartNodes.forEach(n => {
-                let shapeStart = "["; let shapeEnd = "]";
-                let nodeClass = "process";
- 
-                if(n.type === 'terminal') { shapeStart = "(["; shapeEnd = "])"; nodeClass = "terminal"; }
-                else if(n.type === 'prepare') { shapeStart = "{{"; shapeEnd = "}}"; nodeClass = "prepare"; }
-                else if(n.type === 'io') { shapeStart = "[/"; shapeEnd = "/]"; nodeClass = "io"; }
-                else if(n.type === 'decision') { shapeStart = "{"; shapeEnd = "}"; nodeClass = "decision"; }
-
-                // Sanitize text for mermaid (remove quotes and brackets)
-                let text = n.text.replace(/["{}()\[\]]/g, '');
-                defs += `  id${n.id}${shapeStart}"${n.id}. ${text}"${shapeEnd}:::${nodeClass}\\n`;
-            });
-
-            defs += "\n";
-
-            // 2. Define Links
-            AppState.flowchartNodes.forEach(n => {
-                if (n.type === 'decision') {
-                    // Only draw link if the target ID exists in our list
-                    if (n.trueNext && validIds.includes(n.trueNext)) {
-                        defs += `  id${n.id} -- 참 --> id${n.trueNext}\\n`;
-                    }
-                    if (n.condType !== 'if' && n.falseNext && validIds.includes(n.falseNext)) {
-                        defs += `  id${n.id} -- 거짓 --> id${n.falseNext}\\n`;
-                    }
-                } else {
-                    if (n.next && validIds.includes(n.next)) {
-                        defs += `  id${n.id} --> id${n.next}\\n`;
-                    }
-                }
-            });
-
-            return defs;
-        }
-
-        async function renderMermaidGraph() {
-            if (AppState.flowchartNodes.length === 0) {
-                els.graphPlaceholder.classList.remove('hidden');
-                els.mermaidTarget.innerHTML = '';
-                return;
-            }
- 
-            els.graphPlaceholder.classList.add('hidden');
- 
-            const graphSyntax = generateMermaidSyntax();
-            try {
-                // Clear previous
-                els.mermaidTarget.innerHTML = '';
-                // Render new
-                const { svg } = await mermaid.render('mermaidGraph_' + Date.now(), graphSyntax);
-                els.mermaidTarget.innerHTML = svg;
-            } catch (err) {
-                console.error("Mermaid Render Error", err);
-                // Graceful fail - usually happens while typing incomplete syntax, but our generator should prevent this.
-            }
-        }
-
-        // --- Image Download ---
-        function downloadGraph() {
-            const svgElem = document.querySelector('#mermaidTarget svg');
-            if (!svgElem) {
-                Modal.show('알림', '다운로드할 순서도가 없습니다. 먼저 단계를 추가해주세요.');
+            if (val === 'none') {
+                els.shapeDesc.textContent = '도형을 선택하면 설명이 나타납니다.';
                 return;
             }
 
-            const canvas = document.createElement('canvas');
-            const ctx = canvas.getContext('2d');
- 
-            const xml = new XMLSerializer().serializeToString(svgElem);
-            const svg64 = btoa(unescape(encodeURIComponent(xml)));
-            const b64Start = 'data:image/svg+xml;base64,';
-            const image64 = b64Start + svg64;
+            els.shapeInputArea.classList.add('flex');
+            els.shapeInputArea.classList.remove('hidden');
 
-            const img = new Image();
-            img.onload = function() {
-                // Add padding and white background
-                canvas.width = img.width + 40;
-                canvas.height = img.height + 60;
- 
-                ctx.fillStyle = '#ffffff';
-                ctx.fillRect(0, 0, canvas.width, canvas.height);
- 
-                // Add title and name
-                ctx.fillStyle = '#1f2937';
-                ctx.font = 'bold 16px "Noto Sans KR", sans-serif';
-                const titleText = AppState.problems[AppState.currentProblemIndex]?.title || '순서도';
-                const nameText = document.getElementById('studentName').value.trim();
-                const headerText = nameText ? `${titleText} (작성자: ${nameText})` : titleText;
-                ctx.fillText(headerText, 20, 30);
-
-                ctx.drawImage(img, 20, 40);
-
-                const a = document.createElement('a');
-                const safeTitle = titleText.replace(/[^a-z0-9가-힣]/gi, '_');
-                a.download = `순서도\_${safeTitle}.png`;
-                a.href = canvas.toDataURL('image/png');
-                a.click();
+            const descriptions = {
+                'terminal': '순서도의 시작과 끝을 나타냅니다. (예: 시작, 종료)',
+                'prepare': '변수의 선언이나 준비 상태를 설정합니다. (예: 빵, 토스트기)',
+                'process': '실제 처리할 작업이나 연산을 나타냅니다. (예: 잼을 바른다)',
+                'io': '데이터의 입력이나 출력을 나타냅니다. (예: 빵을 넣는다)',
+                'decision': '조건을 판단하여 흐름을 분기합니다. (예: 빵이 구워졌는가?)'
             };
-            img.src = image64;
+            els.shapeDesc.textContent = descriptions[val];
+
+            if (val === 'decision') {
+                els.conditionInputGroup.classList.remove('hidden');
+                els.conditionInputGroup.classList.add('flex');
+                handleConditionTypeChange(); 
+            } else {
+                els.standardInputGroup.classList.remove('hidden');
+                els.standardInputGroup.classList.add('flex');
+                
+                if (val === 'terminal') els.standardTextInput.placeholder = '예: 시작 또는 종료';
+                else if (val === 'prepare') els.standardTextInput.placeholder = '예: 빵, 토스트기 준비';
+                else els.standardTextInput.placeholder = '내용을 입력하세요';
+                
+                els.standardTextInput.value = '';
+            }
         }
 
-
-        // --- Custom UI Modal ---
-        const Modal = {
-            show: function(title, message, type = 'info') {
-                document.getElementById('modalTitle').textContent = title;
-                document.getElementById('modalTitle').className = `text-lg font-bold mb-2 ${type === 'error' ? 'text-red-600' : 'text-primary'}`;
-                document.getElementById('modalMessage').textContent = message;
-                document.getElementById('modalInput').classList.add('hidden');
-                document.getElementById('modalBtnCancel').classList.add('hidden');
- 
-                const btnConfirm = document.getElementById('modalBtnConfirm');
-                btnConfirm.onclick = () => this.hide();
-
-                this._display();
-            },
-            prompt: function(title, message, callback) {
-                document.getElementById('modalTitle').textContent = title;
-                document.getElementById('modalTitle').className = 'text-lg font-bold mb-2 text-admin';
-                document.getElementById('modalMessage').textContent = message;
- 
-                const input = document.getElementById('modalInput');
-                input.classList.remove('hidden');
-                input.value = '';
- 
-                const btnCancel = document.getElementById('modalBtnCancel');
-                btnCancel.classList.remove('hidden');
-                btnCancel.onclick = () => this.hide();
-
-                const btnConfirm = document.getElementById('modalBtnConfirm');
-                btnConfirm.onclick = () => {
-                    this.hide();
-                    if(callback) callback(input.value);
-                };
-
-                this._display();
-                setTimeout(() => input.focus(), 100); // Focus input after transition
-            },
-            confirm: function(title, message, onConfirm) {
-                document.getElementById('modalTitle').textContent = title;
-                document.getElementById('modalTitle').className = 'text-lg font-bold mb-2 text-red-600';
-                document.getElementById('modalMessage').textContent = message;
-                document.getElementById('modalInput').classList.add('hidden');
- 
-                const btnCancel = document.getElementById('modalBtnCancel');
-                btnCancel.classList.remove('hidden');
-                btnCancel.onclick = () => this.hide();
-
-                const btnConfirm = document.getElementById('modalBtnConfirm');
-                btnConfirm.className = 'px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded font-bold transition';
-                btnConfirm.onclick = () => {
-                    this.hide();
-                    if(onConfirm) onConfirm();
-                };
-
-                this._display();
-            },
-            _display: function() {
-                const modal = document.getElementById('customModal');
-                const content = document.getElementById('modalContent');
-                modal.classList.remove('hidden');
-                setTimeout(() => {
-                    content.classList.remove('scale-95', 'opacity-0');
-                    content.classList.add('scale-100', 'opacity-100');
-                }, 10);
-            },
-            hide: function() {
-                const modal = document.getElementById('customModal');
-                const content = document.getElementById('modalContent');
-                content.classList.remove('scale-100', 'opacity-100');
-                content.classList.add('scale-95', 'opacity-0');
-                setTimeout(() => {
-                    modal.classList.add('hidden');
-                    // Reset confirm button style
-                    document.getElementById('modalBtnConfirm').className = 'px-4 py-2 bg-primary hover:bg-blue-600 text-white rounded font-bold transition';
-                }, 200);
+        function handleConditionTypeChange() {
+            const val = els.conditionTypeSelect.value;
+            if (val === 'ifelse') {
+                els.condFalseGroup.classList.remove('hidden');
+            } else {
+                els.condFalseGroup.classList.add('hidden');
             }
-        };
+        }
 
-        // Bootstrap
-        window.onload = init;
+        function addShapeToFlowchart() {
+            // 이미 '종료' 도형이 있는지 확인
+            if (AppState.flowchartNodes.length > 0) {
+                const lastNode = AppState.flowchartNodes[AppState.flowchartNodes.length - 1];
+                if (lastNode.type === ShapeTypes.TERMINAL && (lastNode.text.includes('종료') || lastNode.text.includes('끝'))) {
+                    Modal.show('알림', '이미 순서도가 종료되었습니다. 도형을 더 추가할 수 없습니다.', 'info');
+                    return;
+                }
+            }
 
+            const type = els.shapeSelect.value;
+            if (type === 'none') {
+                Modal.show('알림', '먼저 순서도에 추가할 도형을 선택하세요.', 'info');
+                return;
+            }
+
+            let node = { type, id: Date.now() };
+
+            if (type === 'decision') {
+                node.condType = els.conditionTypeSelect.value;
+                node.text = els.condMainText.value.trim();
+                node.trueShape = els.condTrueShape.value;
+                node.trueText = els.condTrueText.value.trim();
+                
+                if (node.condType === 'ifelse') {
+                    node.falseShape = els.condFalseShape.value;
+                    node.falseText = els.condFalseText.value.trim();
+                }
+                
+                if (!node.text || !node.trueText || (node.condType === 'ifelse' && !node.falseText)) {
+                    Modal.show('입력 확인', '조건과 그에 따른 행동을 모두 입력해주세요.', 'info');
+                    return;
+                }
+            } else {
+                node.text = els.standardTextInput.value.trim();
+                if (!node.text) {
+                    Modal.show('입력 확인', '도형 안에 들어갈 내용을 입력해주세요.', 'info');
+                    return;
+                }
+            }
+
+            AppState.flowchartNodes.push(node);
+            
+            els.standardTextInput.value = '';
+            els.condMainText.value = '';
+            els.condTrueText.value = '';
+            els.condFalseText.value = '';
+            els.condTrueShape.value = 'process';
+            if (els.condFalseShape) els.condFalseShape.value = 'process';
+            
+            if(type !== 'decision') {
+                els.standardTextInput.focus();
+            }
+            
+            drawCanvas();
+            
+            setTimeout(() => {
+                els.canvasContainer.scrollTop = els.canvasContainer.scrollHeight;
+            }, 50);
+
+            // '종료' 도형 추가 시 이미지 팝업 표시
+            if (node.type === ShapeTypes.TERMINAL && (node.text.includes('종료') || node.text.includes('끝'))) {
+                setTimeout(() => {
+                    showCompletionPopup();
+                }, 300); // 캔버스 렌더링을 기다린 후 실행
+            }
+        }
+
+        function showCompletionPopup() {
+            drawCanvas(); // 최신 상태 확실히 렌더링
+            try {
+                const dataUrl = els.canvas.toDataURL('image/png');
+                els.completedImage.src = dataUrl;
+                els.imageModal.classList.remove('hidden');
+            } catch (err) {
+                console.error("팝업 이미지 생성 실패", err);
+            }
+        }
+
+        // --- Canvas Rendering ---
+        function resizeCanvas() {
+            const containerWidth = els.canvasContainer.clientWidth;
+            AppState.canvasWidth = Math.max(containerWidth - 32, 300); 
+        }
+
+        function wrapText(context, text, x, y, maxWidth, lineHeight) {
+            let words = text.split(' ');
+            let line = '';
+            let lines = [];
+
+            for(let n = 0; n < words.length; n++) {
+                let testLine = line + words[n] + ' ';
+                let metrics = context.measureText(testLine);
+                let testWidth = metrics.width;
+                if (testWidth > maxWidth && n > 0) {
+                    lines.push(line.trim());
+                    line = words[n] + ' ';
+                } else {
+                    line = testLine;
+                }
+            }
+            lines.push(line.trim());
+            
+            let currentY = y - ((lines.length - 1) * lineHeight) / 2;
+            for(let i=0; i<lines.length; i++) {
+                context.fillText(lines[i], x, currentY);
+                currentY += lineHeight;
+            }
+        }
+
+        function drawShape(ctx, type, x, y, w, h, style, text) {
+            ctx.fillStyle = style.bg;
+            ctx.strokeStyle = style.border;
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+
+            const actualW = Math.min(w, AppState.canvasWidth * 0.8);
+
+            switch (type) {
+                case ShapeTypes.TERMINAL:
+                    const radius = h / 2;
+                    ctx.moveTo(x - actualW/2 + radius, y - h/2);
+                    ctx.lineTo(x + actualW/2 - radius, y - h/2);
+                    ctx.arc(x + actualW/2 - radius, y, radius, -Math.PI/2, Math.PI/2);
+                    ctx.lineTo(x - actualW/2 + radius, y + h/2);
+                    ctx.arc(x - actualW/2 + radius, y, radius, Math.PI/2, -Math.PI/2);
+                    ctx.closePath();
+                    break;
+                case ShapeTypes.PREPARE:
+                    const hexEdge = Math.min(20, actualW * 0.1);
+                    ctx.moveTo(x - actualW/2 + hexEdge, y - h/2);
+                    ctx.lineTo(x + actualW/2 - hexEdge, y - h/2);
+                    ctx.lineTo(x + actualW/2, y);
+                    ctx.lineTo(x + actualW/2 - hexEdge, y + h/2);
+                    ctx.lineTo(x - actualW/2 + hexEdge, y + h/2);
+                    ctx.lineTo(x - actualW/2, y);
+                    ctx.closePath();
+                    break;
+                case ShapeTypes.PROCESS:
+                    ctx.rect(x - actualW/2, y - h/2, actualW, h);
+                    break;
+                case ShapeTypes.IO:
+                    const offset = Math.min(20, actualW * 0.1);
+                    ctx.moveTo(x - actualW/2 + offset, y - h/2);
+                    ctx.lineTo(x + actualW/2, y - h/2);
+                    ctx.lineTo(x + actualW/2 - offset, y + h/2);
+                    ctx.lineTo(x - actualW/2, y + h/2);
+                    ctx.closePath();
+                    break;
+                case ShapeTypes.DECISION:
+                    ctx.moveTo(x, y - h/2);
+                    ctx.lineTo(x + actualW/2, y);
+                    ctx.lineTo(x, y + h/2);
+                    ctx.lineTo(x - actualW/2, y);
+                    ctx.closePath();
+                    break;
+            }
+
+            ctx.fill();
+            ctx.stroke();
+
+            ctx.fillStyle = style.text;
+            ctx.font = '500 14px "Noto Sans KR", sans-serif';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            
+            const textMaxWidth = type === ShapeTypes.DECISION ? actualW - 40 : actualW - 20;
+            wrapText(ctx, text || '', x, y, textMaxWidth, 20);
+        }
+
+        function drawArrow(ctx, fromX, fromY, toX, toY, text = '', isVertical = true) {
+            ctx.strokeStyle = '#9CA3AF';
+            ctx.fillStyle = '#9CA3AF';
+            ctx.lineWidth = 2;
+            
+            ctx.beginPath();
+            ctx.moveTo(fromX, fromY);
+            ctx.lineTo(toX, toY);
+            ctx.stroke();
+
+            const angle = Math.atan2(toY - fromY, toX - fromX);
+            ctx.beginPath();
+            ctx.moveTo(toX, toY);
+            ctx.lineTo(toX - 10 * Math.cos(angle - Math.PI/6), toY - 10 * Math.sin(angle - Math.PI/6));
+            ctx.lineTo(toX - 10 * Math.cos(angle + Math.PI/6), toY - 10 * Math.sin(angle + Math.PI/6));
+            ctx.closePath();
+            ctx.fill();
+
+            if (text) {
+                ctx.fillStyle = '#4B5563'; 
+                ctx.font = '600 12px "Noto Sans KR"';
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'bottom';
+                
+                let textX = (fromX + toX) / 2;
+                let textY = (fromY + toY) / 2;
+                
+                if (isVertical) {
+                    textX += 15;
+                    textY += 5;
+                } else {
+                    textY -= 5;
+                }
+                
+                ctx.fillText(text, textX, textY);
+            }
+        }
+
+        function drawCanvas() {
+            const baseNodeWidth = 180;
+            const nodeHeight = 50;
+            const spacing = 40;
+            
+            let estimatedHeight = 50;
+            for (let i = 0; i < AppState.flowchartNodes.length; i++) {
+                const node = AppState.flowchartNodes[i];
+                if (node.type === 'decision') {
+                    estimatedHeight += nodeHeight + 20 + spacing; 
+                    estimatedHeight += nodeHeight + spacing; 
+                } else {
+                    estimatedHeight += nodeHeight + spacing;
+                }
+            }
+            
+            const minHeight = els.canvasContainer.clientHeight - 32;
+            AppState.canvasHeight = Math.max(estimatedHeight + 50, minHeight);
+            
+            els.canvas.width = AppState.canvasWidth;
+            els.canvas.height = AppState.canvasHeight;
+            
+            ctx.fillStyle = '#ffffff';
+            ctx.fillRect(0, 0, els.canvas.width, els.canvas.height);
+
+            if (AppState.flowchartNodes.length === 0) {
+                ctx.fillStyle = '#9CA3AF';
+                ctx.font = '14px "Noto Sans KR"';
+                ctx.textAlign = 'center';
+                ctx.fillText('왼쪽에서 도형을 추가하여 순서도를 완성하세요.', AppState.canvasWidth / 2, AppState.canvasHeight / 2);
+                return;
+            }
+
+            let drawY = 50;
+            const centerX = AppState.canvasWidth / 2;
+            let lastX = centerX;
+            let lastBottomY = 0;
+
+            AppState.flowchartNodes.forEach((node, index) => {
+                const isLast = index === AppState.flowchartNodes.length - 1;
+                const style = ShapeStyles[node.type];
+                
+                if (index > 0) {
+                    drawArrow(ctx, lastX, lastBottomY, centerX, drawY);
+                }
+
+                if (node.type === 'decision') {
+                    const diamondH = nodeHeight + 30;
+                    drawShape(ctx, node.type, centerX, drawY, baseNodeWidth + 20, diamondH, style, node.text);
+                    
+                    const branchY = drawY + diamondH/2 + spacing;
+                    
+                    if (node.condType === 'ifelse') {
+                        const offsetRight = Math.min(baseNodeWidth + 20, (AppState.canvasWidth / 2) - 20);
+                        const trueBlockX = centerX;
+                        const trueBlockY = branchY;
+                        const falseBlockX = centerX + offsetRight;
+                        const falseBlockY = branchY;
+
+                        drawArrow(ctx, centerX, drawY + diamondH/2, trueBlockX, trueBlockY - nodeHeight/2, '예(True)', true);
+                        
+                        ctx.beginPath();
+                        ctx.moveTo(centerX + (baseNodeWidth+20)/2, drawY);
+                        ctx.lineTo(falseBlockX, drawY);
+                        ctx.lineTo(falseBlockX, falseBlockY - nodeHeight/2 - 10);
+                        ctx.strokeStyle = '#9CA3AF';
+                        ctx.stroke();
+                        
+                        drawArrow(ctx, falseBlockX, falseBlockY - nodeHeight/2 - 10, falseBlockX, falseBlockY - nodeHeight/2, '아니오(False)', true);
+
+                        const trueShapeType = node.trueShape || ShapeTypes.PROCESS;
+                        const falseShapeType = node.falseShape || ShapeTypes.PROCESS;
+                        
+                        const trueH = trueShapeType === ShapeTypes.DECISION ? nodeHeight + 30 : nodeHeight;
+                        const falseH = falseShapeType === ShapeTypes.DECISION ? nodeHeight + 30 : nodeHeight;
+
+                        drawShape(ctx, trueShapeType, trueBlockX, trueBlockY, baseNodeWidth, trueH, ShapeStyles[trueShapeType], node.trueText);
+                        drawShape(ctx, falseShapeType, falseBlockX, falseBlockY, baseNodeWidth, falseH, ShapeStyles[falseShapeType], node.falseText);
+
+                        if (!isLast) {
+                            const maxH = Math.max(trueH, falseH);
+                            const mergeY = trueBlockY + maxH/2 + spacing/2;
+                            
+                            ctx.beginPath();
+                            ctx.moveTo(trueBlockX, trueBlockY + trueH/2);
+                            ctx.lineTo(trueBlockX, mergeY);
+                            ctx.stroke();
+
+                            ctx.beginPath();
+                            ctx.moveTo(falseBlockX, falseBlockY + falseH/2);
+                            ctx.lineTo(falseBlockX, mergeY);
+                            ctx.lineTo(trueBlockX, mergeY);
+                            ctx.stroke();
+                            
+                            lastBottomY = mergeY;
+                        } else {
+                            lastBottomY = trueBlockY + trueH/2;
+                        }
+                        
+                        drawY = branchY + Math.max(trueH, falseH)/2 + spacing;
+
+                    } else {
+                        const trueBlockX = centerX;
+                        const trueBlockY = branchY;
+                        
+                        drawArrow(ctx, centerX, drawY + diamondH/2, trueBlockX, trueBlockY - nodeHeight/2, '예(True)', true);
+                        
+                        const trueShapeType = node.trueShape || ShapeTypes.PROCESS;
+                        const trueH = trueShapeType === ShapeTypes.DECISION ? nodeHeight + 30 : nodeHeight;
+                        
+                        drawShape(ctx, trueShapeType, trueBlockX, trueBlockY, baseNodeWidth, trueH, ShapeStyles[trueShapeType], node.trueText);
+
+                        ctx.fillStyle = '#EF4444'; 
+                        ctx.font = '12px "Noto Sans KR"';
+                        ctx.textAlign = 'left';
+                        const falseStartX = centerX + (baseNodeWidth+20)/2 + 10;
+                        if (falseStartX < AppState.canvasWidth - 20) {
+                             ctx.fillText('아니오 ➔ 넘어감', falseStartX, drawY);
+                        }
+
+                        lastBottomY = trueBlockY + trueH/2;
+                        drawY = branchY + trueH/2 + spacing;
+                    }
+
+                } else {
+                    drawShape(ctx, node.type, centerX, drawY, baseNodeWidth, nodeHeight, style, node.text);
+                    lastBottomY = drawY + nodeHeight/2;
+                    drawY += nodeHeight + spacing;
+                }
+                
+                lastX = centerX;
+            });
+            
+            const sName = els.studentName.value.trim();
+            if (sName && !AppState.isAdmin && AppState.flowchartNodes.length > 0) {
+                ctx.save();
+                ctx.fillStyle = 'rgba(79, 70, 229, 0.05)'; 
+                ctx.font = 'bold 48px "Noto Sans KR"';
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'middle';
+                ctx.translate(AppState.canvasWidth/2, AppState.canvasHeight/2);
+                ctx.rotate(-Math.PI/6); 
+                ctx.fillText(`${sName}의 순서도`, 0, 0);
+                ctx.restore();
+            }
+        }
+
+        function downloadCanvas() {
+            if (AppState.flowchartNodes.length <= 1) { // 시작 노드만 있는 경우 방지
+                Modal.show('저장 실패', '내용을 추가하여 순서도를 완성한 후 저장해주세요.', 'error');
+                return;
+            }
+            
+            const student = els.studentName.value.trim();
+            if (!student && !AppState.isAdmin) {
+                Modal.show('학생 이름 입력', '자신의 결과물임을 증명하기 위해 상단에 이름을 먼저 입력해주세요.', 'info');
+                els.studentName.focus();
+                return;
+            }
+            
+            drawCanvas(); 
+            
+            try {
+                const dataUrl = els.canvas.toDataURL('image/png');
+                const a = document.createElement('a');
+                a.href = dataUrl;
+                a.download = `순서도_${student || '선생님'}_${new Date().toISOString().slice(0,10)}.png`;
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+            } catch (err) {
+                Modal.show('저장 오류', '이미지를 저장하는 중 문제가 발생했습니다.', 'error');
+            }
+        }
+
+        window.addEventListener('DOMContentLoaded', init);
     </script>
 </body>
 </html>
